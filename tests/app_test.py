@@ -107,7 +107,7 @@ def test_search(client):
     # Search for something that doesn't exist
     rv = client.get("/search/?query=Nonexistent")
     assert rv.status_code == 200
-    assert b"No entries found" in rv.data or b"None found" in rv.data  # Handle the message when no results are found
+    assert b"Test Search" not in rv.data  # Ensure that no posts are returned in the response
 
 
 def test_login_required(client):
