@@ -90,8 +90,35 @@ def test_delete_message(client):
 
 def test_search(client):
     """Ensure search feature functions"""
-    # add test here
+    # Log in and add a test post
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    client.post(
+        "/add",
+        data=dict(title="Test Search", text="Testing the search feature"),
+        follow_redirects=True,
+    )
+
+    # Search for the added post
+    rv = client.get("/search/?query=Search")
+    assert rv.status_code == 200
+    assert b"Test Search" in rv.data  # Check that the post title is in the response
+    assert b"Testing the search feature" in rv.data  # Check that the post content is in the response
+
+    # Search for something that doesn't exist
+    rv = client.get("/search/?query=Nonexistent")
+    assert rv.status_code == 200
+    assert b"No entries found" in rv.data or b"None found" in rv.data  # Handle the message when no results are found
+
 
 def test_login_required(client):
     """Ensure login required works"""
-    # add test here
+    # Attempt to delete a post without logging in
+    rv = client.get("/delete/1")
+    assert rv.status_code == 401  # Should return a 401 Unauthorized status
+    assert b"Please log in." in rv.data  # Check the message prompts for login
+
+    # Log in and then try deleting
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    rv = client.get("/delete/1")
+    data = json.loads(rv.data)
+    assert data["status"] == 1  # Ensure deletion works when logged in
